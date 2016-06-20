@@ -19,4 +19,13 @@ class_def_list :
   | class_def class_def_list { $1 :: $2 }
 
 class_def :
-    CLASS ID EXTENDS ID LBRACE RBRACE { $2 ^ $4 }
+    CLASS ID EXTENDS ID LBRACE
+      field_list
+    RBRACE { $2 ^ $4 ^ String.concat " " $6 }
+
+field_list:
+    { [] }
+  | field field_list { $1 :: $2 }
+
+field:
+  ID ID SEMICOLON { $1 ^ $2 }

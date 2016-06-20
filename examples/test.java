@@ -1,3 +1,3 @@
-class hoge extends Object {}
-class piyo extends Object {}
-class poyo extends Object {}
+class hoge extends Object {int x; string str;}
+class piyo extends Object {int y;}
+class poyo extends Object {int z;}
