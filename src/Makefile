@@ -3,6 +3,7 @@ OCAMLOPT=ocamlopt
 OCAMLDEP=ocamldep
 OCAMLYACC=ocamlyacc
 OCAMLLEX=ocamllex
+MENHIR=menhir
 
 PROGNAME=fjava
 
@@ -23,7 +24,7 @@ all: $(DEPEND) $(OBJS)
 
 parser.ml parser.mli: parser.mly
 	@rm -f $@
-	$(OCAMLYACC) $<
+	$(MENHIR) $<
 
 lexer.ml: lexer.mll
 	@rm -f $@

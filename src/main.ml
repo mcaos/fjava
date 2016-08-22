@@ -1,3 +1,11 @@
+open Printf
+
+let print_error lexbuf message =
+  let start = Lexing.lexeme_start_p lexbuf in
+  let file = start.Lexing.pos_fname in
+  let line = start.Lexing.pos_lnum in
+  eprintf "%s:line %d: %s\n" file line message
+
 let rec print_list = function
     [] -> ()
   | h::t -> print_endline h; print_list t
@@ -5,14 +13,17 @@ let rec print_list = function
 let read_from_file file =
   print_endline ("Reading from " ^ file);
   let ic = open_in file in
-    try
-      let lexbuf = Lexing.from_channel ic in
-      let classes = Parser.toplevel Lexer.main lexbuf in
-        print_list classes
-    with e ->
-      close_in_noerr ic;
-      print_endline "Error";
-      raise e
-
+  let lexbuf = Lexing.from_channel ic in
+  try
+    let classes = Parser.toplevel Lexer.main lexbuf in
+      print_list classes
+  with e ->
+    begin match e with
+      Parser.Error ->
+        let token = Lexing.lexeme lexbuf in
+        let message = sprintf "parser error: unexpected token '%s'" token in
+        print_error lexbuf message;
+        exit 1
+    end
 
 let _ = read_from_file "../examples/test.java"
