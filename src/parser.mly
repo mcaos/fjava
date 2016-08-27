@@ -1,4 +1,5 @@
 %{
+open Syntax
 %}
 
 %token <string> ID
@@ -8,7 +9,7 @@
 %token EOF
 
 %start toplevel
-%type <string list> toplevel
+%type <Syntax.program> toplevel
 %%
 
 toplevel :
@@ -19,22 +20,52 @@ class_def_list :
   | class_def class_def_list { $1 :: $2 }
 
 class_def :
-    CLASS ID EXTENDS ID LBRACE
-      field_list
-      constructer
-    RBRACE { $2 ^ $4 ^ String.concat " " $6 ^ $7}
+  CLASS ID EXTENDS ID LBRACE
+    field_list
+    constructer
+    method_def_list
+  RBRACE {
+    {
+      Class.name = Id.make $2;
+      super = Type.make $4;
+      fields = $6;
+      constructor = $7;
+      methods = $8;
+    }
+  }
 
 field_list :
     { [] }
   | field_list field { $1 @ [$2] }
 
 field:
-  ID ID SEMICOLON { $1 ^ $2 }
+  ID ID SEMICOLON { { Field.name = Id.make $2; ty = Type.make $1 } }
 
 constructer :
   ID LPAREN param_list_opt RPAREN LBRACE
     SUPER LPAREN argument_list RPAREN SEMICOLON
-  RBRACE { $1 ^ (String.concat " " $3) ^ (String.concat " " $8) }
+  RBRACE { {
+    Constructor.name = (Id.make $1);
+    params = $3;
+    super_args = $8;
+    body = [];
+  } }
+
+method_def_list :
+    { [] }
+  | method_def method_def_list { $1 :: $2 }
+
+method_def :
+  ID ID LPAREN param_list_opt RPAREN LBRACE
+    RETURN expression SEMICOLON
+  RBRACE {
+    {
+      Method.name = Id.make $2;
+      params = $4;
+      body = $8;
+      return_type = Type.make $1;
+    }
+  }
 
 param_list_opt :
     { [] }
@@ -45,11 +76,36 @@ param_list :
   | param COMMA param_list { $1 :: $3 }
 
 param :
-  ID ID { $1 ^ $2 }
+  ID ID { (Id.make $2, Type.make $1) }
 
 argument_list:
     { [] }
   | argument COMMA argument_list { $1 :: $3 }
 
 argument :
-  ID { $1 }
+  expression { $1 }
+
+expression :
+  | var { $1 }
+  | field_get { $1 }
+  | method_call { $1 }
+  | new_instance { $1 }
+  | cast { $1 }
+
+var :
+    ID { Var (Id.make $1) }
+  | THIS { Var (Id.make "this") }
+
+field_get :
+  expression PERIOD ID { FieldGet ($1, Id.make $3) }
+
+method_call :
+  expression PERIOD ID LPAREN argument_list RPAREN {
+    MethodCall ($1, Id.make $3, $5)
+  }
+
+new_instance :
+  NEW ID LPAREN argument_list RPAREN { New (Id.make $2, $4) }
+
+cast :
+  LPAREN ID RPAREN expression { Cast (Id.make $2, $4) }

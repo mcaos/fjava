@@ -7,7 +7,8 @@ let reservedWords = [
   ("super", Parser.SUPER);
   ("this", Parser.THIS);
   ("return", Parser.RETURN);
-  ("new", Parser.NEW)
+  ("new", Parser.NEW);
+  ("return", Parser.RETURN);
 ]
 }
 

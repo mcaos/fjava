@@ -7,7 +7,7 @@ MENHIR=menhir
 
 PROGNAME=fjava
 
-OBJS=parser.cmo lexer.cmo main.cmo
+OBJS=syntax.cmo parser.cmo lexer.cmo main.cmo
 
 DEPEND += lexer.ml parser.ml
 

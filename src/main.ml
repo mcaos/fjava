@@ -6,17 +6,13 @@ let print_error lexbuf message =
   let line = start.Lexing.pos_lnum in
   eprintf "%s:line %d: %s\n" file line message
 
-let rec print_list = function
-    [] -> ()
-  | h::t -> print_endline h; print_list t
-
 let read_from_file file =
   print_endline ("Reading from " ^ file);
   let ic = open_in file in
   let lexbuf = Lexing.from_channel ic in
   try
     let classes = Parser.toplevel Lexer.main lexbuf in
-      print_list classes
+    print_string "hoge"
   with e ->
     begin match e with
       Parser.Error ->
