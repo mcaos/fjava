@@ -43,7 +43,7 @@ field:
 
 constructor :
   ID LPAREN param_list_opt RPAREN LBRACE
-    SUPER LPAREN argument_list RPAREN SEMICOLON
+    SUPER LPAREN argument_list_opt RPAREN SEMICOLON
     field_init_list
   RBRACE { {
     Constructor.name = (Id.make $1);
@@ -79,8 +79,12 @@ param_list :
 param :
   ID ID { (Id.make $2, Type.make $1) }
 
-argument_list:
+argument_list_opt :
     { [] }
+  | argument_list { $1 }
+
+argument_list :
+    argument { [$1] }
   | argument COMMA argument_list { $1 :: $3 }
 
 argument :
@@ -109,12 +113,12 @@ field_get :
   expression PERIOD ID { FieldGet ($1, Id.make $3) }
 
 method_call :
-  expression PERIOD ID LPAREN argument_list RPAREN {
+  expression PERIOD ID LPAREN argument_list_opt RPAREN {
     MethodCall ($1, Id.make $3, $5)
   }
 
 new_instance :
-  NEW ID LPAREN argument_list RPAREN { New (Id.make $2, $4) }
+  NEW ID LPAREN argument_list_opt RPAREN { New (Id.make $2, $4) }
 
 cast :
   LPAREN ID RPAREN expression { Cast (Id.make $2, $4) }

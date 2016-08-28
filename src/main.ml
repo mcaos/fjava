@@ -27,4 +27,11 @@ let read_from_file file =
         raise e
     end
 
-let _ = read_from_file "../examples/test.java"
+let _ =
+  let len = Array.length Sys.argv in
+  if len = 2 then
+    let argfile = Sys.argv.(1) in
+    read_from_file argfile
+  else
+    print_string "Usage: fjava <porgram>"
+
