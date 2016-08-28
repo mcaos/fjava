@@ -5,7 +5,7 @@ open Syntax
 %token <string> ID
 
 %token CLASS EXTENDS SUPER THIS RETURN NEW
-%token COMMA PERIOD EQ LBRACE LPAREN RBRACE RPAREN SEMICOLON
+%token COMMA PERIOD LBRACE LPAREN RBRACE RPAREN SEMICOLON
 %token EOF
 
 %start toplevel
@@ -22,7 +22,7 @@ class_def_list :
 class_def :
   CLASS ID EXTENDS ID LBRACE
     field_list
-    constructer
+    constructor
     method_def_list
   RBRACE {
     {
@@ -41,7 +41,7 @@ field_list :
 field:
   ID ID SEMICOLON { { Field.name = Id.make $2; ty = Type.make $1 } }
 
-constructer :
+constructor :
   ID LPAREN param_list_opt RPAREN LBRACE
     SUPER LPAREN argument_list RPAREN SEMICOLON
   RBRACE { {

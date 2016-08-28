@@ -17,7 +17,6 @@ rule main = parse
     [' ' '\009' '\012' '\n']+ { main lexbuf }
   | "," { Parser.COMMA }
   | "." { Parser.PERIOD }
-  | "=" { Parser.EQ }
   | "{" { Parser.LBRACE }
   | "(" { Parser.LPAREN }
   | "}" { Parser.RBRACE }

@@ -7,6 +7,9 @@
 *.cmx
 *.cmxs
 *.cmxa
+*.omc
+.omakedb
+.omakedb.lock
 
 # ocamlbuild working directory
 _build/

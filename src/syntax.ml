@@ -3,6 +3,7 @@ module Id = struct
     name: string;
   }
   let make n = { name = n; }
+  let name id = id.name
 end
 
 module Type = struct
@@ -51,6 +52,7 @@ module Class = struct
     constructor: Constructor.t;
     methods: Method.t list;
   }
+  let name c = Id.name c.name
 end
 
 type program = Class.t list
