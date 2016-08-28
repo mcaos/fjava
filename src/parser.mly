@@ -4,7 +4,7 @@ open Syntax
 
 %token <string> ID
 
-%token CLASS EXTENDS SUPER THIS RETURN NEW
+%token CLASS EXTENDS SUPER THIS RETURN NEW EQ
 %token COMMA PERIOD LBRACE LPAREN RBRACE RPAREN SEMICOLON
 %token EOF
 
@@ -44,11 +44,12 @@ field:
 constructor :
   ID LPAREN param_list_opt RPAREN LBRACE
     SUPER LPAREN argument_list RPAREN SEMICOLON
+    field_init_list
   RBRACE { {
     Constructor.name = (Id.make $1);
     params = $3;
     super_args = $8;
-    body = [];
+    body = $11;
   } }
 
 method_def_list :
@@ -84,6 +85,14 @@ argument_list:
 
 argument :
   expression { $1 }
+
+field_init_list :
+    { [] }
+  | field_init SEMICOLON field_init_list { $1 :: $3 }
+
+field_init :
+  THIS PERIOD ID EQ ID { (Id.make $3, Var (Id.make $5)) }
+
 
 expression :
   | var { $1 }
