@@ -10,6 +10,9 @@
 *.omc
 .omakedb
 .omakedb.lock
+*.opt
+test
+*.log
 
 # ocamlbuild working directory
 _build/
