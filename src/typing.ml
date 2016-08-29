@@ -67,6 +67,49 @@ let rec check_expr class_table env = function
     t0
   *)
 
+(* is c1 subclass of c0 *)
+let rec is_subclass class_table c0 c1 =
+  if c0 = c1 then
+    (* C <: C *)
+    true
+  else if c1 = base_class_name then
+    false
+  else
+    (* recursively check c1's super class is equal to c0 or not *)
+    is_subclass class_table c0 (Class.super (get_class class_table c1))
+
+
+let rec is_subclasses class_table l0 l1 =
+  match l0, l1 with
+  | [], [] -> true
+  | [], _  -> false
+  | _ , [] -> false
+  | (c0 :: cs0), (c1 :: cs1) ->
+      (is_subclass class_table c0 c1) && (is_subclasses class_table cs0 cs1)
+
+
+let super_of class_table cls =
+  get_class class_table (Class.super cls)
+
+
+let check_constructor_super class_table env cls =
+  let constructor = Class.constructor cls in
+  if Class.ty cls = Class.ty base_class then
+    ()
+  else
+    (* class type not Object *)
+    let super_class = super_of class_table cls in
+    let super_args = Constructor.super_args constructor in
+    let super_args_type = List.map (check_expr class_table env) super_args in
+    let super_params_type = Constructor.params_type (Class.constructor super_class) in
+    (* is super_args_type is subclass of super_params_type *)
+    if is_subclasses class_table super_params_type super_args_type then
+      ()
+    else
+      (* type mismatch OR invalid num of args *)
+      raise (Type_error "Invalid arguments for super class constructor")
+
+
 (* Class.t Environment.t -> Type.t Environment.t -> Constructor.t -> Id.t * expr -> unit *)
 let check_field_initialization class_table env constructor = function
     (* check if this.hoge = hoge *)
@@ -96,7 +139,8 @@ let check_constructor class_table env cls =
     (fun e (name, ty) -> Environment.add (Id.name name) ty e) env (Constructor.params constructor) in
   List.iter
     (check_field_initialization class_table env' constructor)
-    (Constructor.body constructor)
+    (Constructor.body constructor);
+  check_constructor_super class_table env' cls
 
 
 let check_method class_table env meth =

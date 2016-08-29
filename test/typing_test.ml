@@ -63,11 +63,44 @@ let test_check_constructor_field_not_found test_ctx =
     (Type_error "the field `y` is not member of the class `A`")
     (fun _ -> check_class_table class_table)
 
+let test_check_super_constructor text_ctx =
+  let classes = [
+    {
+      Class.name = Id.make "A";
+      super = "Object";
+      fields = [];
+      constructor = {
+        Constructor.name = Id.make "A";
+        params = [ (Id.make "x", Type.make "Object"); (Id.make "y", Type.make "A") ];
+        body = [];
+        super_args = [];
+      };
+      methods = [];
+    };
+    {
+      Class.name = Id.make "B";
+      super = "A";
+      fields = [];
+      constructor = {
+        Constructor.name = Id.make "B";
+        params = [ (Id.make "x", Type.make "Object"); (Id.make "y", Type.make "Object") ];
+        body = [];
+        super_args = [Var(Id.make "x"); Var(Id.make "y") ];
+      };
+      methods = [];
+    }
+  ] in
+  let class_table = make_class_table classes in
+  assert_raises
+    (Type_error "Invalid arguments for super class constructor")
+    (fun _ -> check_class_table class_table)
+
 let suite =
   "typing">::: [
     "test_check_constructor">:: test_check_constructor;
     "test_check_constructor_init">:: test_check_constructor_init;
-    "test_check_constructor_field_not_found">:: test_check_constructor_field_not_found
+    "test_check_constructor_field_not_found">:: test_check_constructor_field_not_found;
+    "test_check_super_constructor">:: test_check_super_constructor
   ]
 
 let () = run_test_tt_main suite

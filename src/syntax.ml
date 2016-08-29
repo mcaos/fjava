@@ -42,6 +42,8 @@ module Constructor = struct
   let params c = c.params
   let body c = c.body
   let super_args c = c.super_args
+
+  let params_type c = List.map snd c.params
 end
 
 module Field = struct
@@ -63,6 +65,7 @@ module Class = struct
     methods: Method.t list;
   }
   let name c = Id.name c.name
+  let super c = c.super
   let ty c = Type.make (Id.name c.name)
   let fields c = c.fields
   let constructor c = c.constructor
