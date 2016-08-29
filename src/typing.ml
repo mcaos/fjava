@@ -37,7 +37,7 @@ let get_field cls field_name =
     List.find (fun f -> Field.name f = field_name) (Class.fields cls)
   with
     Not_found ->
-      raise (Type_error (sprintf "the field `%s` is not member of the class `%s`." field_name (Class.name cls)))
+      raise (Type_error (sprintf "the field `%s` is not member of the class `%s`" field_name (Class.name cls)))
 
 
 let rec check_expr class_table env = function
@@ -82,7 +82,7 @@ let check_field_initialization class_table env constructor = function
           "cannot initialize field with different type: '" ^ field_ty ^ "' != '" ^ param_ty ^ "'"));
       ()
   | (field_name, _) ->
-      raise (Type_error "invalid field initialization")
+      raise (Type_error "Invalid field initialization")
 
 
 
