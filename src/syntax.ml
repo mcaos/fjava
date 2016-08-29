@@ -25,6 +25,10 @@ module Method = struct
     body: expr;
     return_type: Type.t;
   }
+  let name m = Id.name m.name
+  let params m = m.params
+  let body m = m.body
+  let return_type m = m.return_type
 end
 
 module Constructor = struct
@@ -41,6 +45,8 @@ module Field = struct
     name: Id.t;
     ty: Type.t;
   }
+  let name f = Id.name f.name
+  let ty f = f.ty
 end
 
 
@@ -53,6 +59,10 @@ module Class = struct
     methods: Method.t list;
   }
   let name c = Id.name c.name
+  let ty c = Type.make (Id.name c.name)
+  let fields c = c.fields
+  let constructor c = c.constructor
+  let methods c = c.methods
 end
 
 type program = Class.t list

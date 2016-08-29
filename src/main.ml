@@ -21,6 +21,11 @@ let read_from_file file =
         let token = Lexing.lexeme lexbuf in
         let message = sprintf "parser error: unexpected token '%s'" token in
         print_error lexbuf message;
+        exit 1
+    | Type_error(message) ->
+        let message = sprintf "type error: %s" message in
+        print_error lexbuf message;
+        exit 1
      | _ ->
         close_in_noerr ic;
         print_error lexbuf "unknown error";
