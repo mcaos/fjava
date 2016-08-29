@@ -44,6 +44,7 @@ module Constructor = struct
   let super_args c = c.super_args
 
   let params_type c = List.map snd c.params
+  let fields_name c = List.map Id.name (List.map fst c.body)
 end
 
 module Field = struct

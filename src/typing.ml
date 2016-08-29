@@ -171,6 +171,19 @@ let check_super_class table cls =
   (* TODO *)
   ()
 
+let list_compare_without_order l1 l2 =
+  let sorted1 = List.sort compare l1 in
+  let sorted2 = List.sort compare l2 in
+  sorted1 = sorted2
+
+let check_uninitialized_fields cls =
+  let constructor_fields = Constructor.fields_name (Class.constructor cls) in
+  let class_fields = List.map Field.name (Class.fields cls) in
+  if list_compare_without_order constructor_fields class_fields then
+    ()
+  else
+    raise (Type_error ("all fields must be initialized just enough in class: " ^ (Class.name cls)))
+
 
 let check_class class_table env cls =
   check_super_class class_table cls;
@@ -183,6 +196,7 @@ let check_class class_table env cls =
       (* check_field *)
       Environment.add field_name field_type e
   end env' (Class.fields cls) in
+  check_uninitialized_fields cls;
   check_constructor class_table env' cls;
   check_methods class_table env' cls
 
