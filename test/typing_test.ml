@@ -228,6 +228,44 @@ let test_check_invalid_args_method_call test_ctx =
     (fun _ -> check_class_table class_table)
 
 
+let test_check_invalid_args_new_constructor test_ctx =
+  let classes = [
+    {
+      Class.name = Id.make "A";
+      super = "Object";
+      fields = [ { Field.name = Id.make "x"; ty = Type.make "Object"} ];
+      constructor = {
+        Constructor.name = Id.make "A";
+        params = [ (Id.make "x", Type.make "Object") ];
+        body = [ (Id.make "x", Var (Id.make "x")) ];
+        super_args = [];
+      };
+      methods = [];
+    };
+    {
+      Class.name = Id.make "B";
+      super = "Object";
+      fields = [];
+      constructor = {
+        Constructor.name = Id.make "B";
+        params = [];
+        body = [];
+        super_args = [];
+      };
+      methods = [ {
+        Method.name = (Id.make "genA");
+        params = [];
+        body = New (Id.make "A", []);
+        return_type = Type.make "A";
+      } ];
+    }
+  ] in
+  let class_table = make_class_table classes in
+  assert_raises
+    (Type_error "Invalid constructor arguments: A")
+    (fun _ -> check_class_table class_table)
+
+
 let suite =
   "typing">::: [
     "test_check_uninitialized_field">:: test_check_uninitialized_field;
@@ -236,7 +274,8 @@ let suite =
     "test_check_super_constructor">:: test_check_super_constructor;
     "test_check_method_return_type">:: test_check_method_return_type;
     "test_check_method_call">:: test_check_method_call;
-    "test_check_invalid_args_method_call">:: test_check_invalid_args_method_call
+    "test_check_invalid_args_method_call">:: test_check_invalid_args_method_call;
+    "test_check_invalid_args_new_constructor">:: test_check_invalid_args_new_constructor
   ]
 
 let () = run_test_tt_main suite

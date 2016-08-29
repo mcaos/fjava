@@ -95,13 +95,16 @@ let rec check_expr class_table env = function
       Method.return_type meth
     else
       raise (Type_error (sprintf "Invalid arguments: %s" (Id.name method_name)))
+  | New(constructor_name, args) ->
+    let args_type = List.map (check_expr class_table env) args in
+    let cls = get_class class_table (Id.name constructor_name) in
+    let params_type = Constructor.params_type (Class.constructor cls) in
+    if is_subclasses class_table params_type args_type then
+      Class.ty cls
+    else
+      raise (Type_error (sprintf "Invalid constructor arguments: %s" (Constructor.name (Class.constructor cls))))
   | _ -> raise (Type_error ("not impleented"))
   (*
-  | New(x0, es0) ->
-    let ts0 = L.map (infer_expr ct env) es0 in
-    let k0 = class_of ct x0 in
-    ignore (choice_most_specific_ctor ct k0 ts0);
-    Type.name x0
   | Cast(t0, e0) ->
     let t1 = infer_expr ct env e0 in
     if not (is_subclass ct t0 t1) then
