@@ -103,14 +103,23 @@ let rec check_expr class_table env = function
       Class.ty cls
     else
       raise (Type_error (sprintf "Invalid constructor arguments: %s" (Constructor.name (Class.constructor cls))))
-  | _ -> raise (Type_error ("not impleented"))
-  (*
-  | Cast(t0, e0) ->
-    let t1 = infer_expr ct env e0 in
-    if not (is_subclass ct t0 t1) then
-      raise (Type_error (sprintf "`%s` is not subclass of `%s`." (Type.name t1) (Type.name t0)));
-    t0
-  *)
+  | Cast(target_id, expr) ->
+    let subject_ty = check_expr class_table env expr in
+    let target_ty = Type.make (Id.name target_id) in
+    if is_subclass class_table target_ty subject_ty then
+      (* up cast: subject is subclass of target *)
+      target_ty
+    else if is_subclass class_table subject_ty target_ty then
+      (* down cast: target is subclass of subject *)
+      target_ty
+    else
+      (* stupid cast *)
+        begin
+          eprintf
+            "stupid cast from class %s to class '%s"
+            subject_ty target_ty;
+          target_ty
+        end
 
 
 let check_constructor_super class_table env cls =
