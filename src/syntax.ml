@@ -38,6 +38,10 @@ module Constructor = struct
     body: (Id.t * expr) list;
     super_args: expr list;
   }
+  let name c = Id.name c.name
+  let params c = c.params
+  let body c = c.body
+  let super_args c = c.super_args
 end
 
 module Field = struct

@@ -11,8 +11,9 @@
 .omakedb
 .omakedb.lock
 *.opt
-test
 *.log
+*.cache
+test/test
 
 # ocamlbuild working directory
 _build/

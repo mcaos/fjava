@@ -67,7 +67,36 @@ let rec check_expr class_table env = function
     t0
   *)
 
-let check_constructor class_table env constructor = ()
+(* Class.t Environment.t -> Type.t Environment.t -> Constructor.t -> Id.t * expr -> unit *)
+let check_field_initialization class_table env constructor = function
+    (* check if this.hoge = hoge *)
+    (field_name, Var param) when Id.name field_name = Id.name param ->
+      (* check if field type equal to param type *)
+      let class_name = Constructor.name constructor in
+      let this = get_class class_table (Type.make class_name) in
+      let field = get_field this (Id.name field_name) in
+      let field_ty = Field.ty field in
+      let param_ty = check_expr class_table env (Var param) in
+      if field_ty <> param_ty then
+        raise (Type_error (
+          "cannot initialize field with different type: '" ^ field_ty ^ "' != '" ^ param_ty ^ "'"));
+      ()
+  | (field_name, _) ->
+      raise (Type_error "invalid field initialization")
+
+
+
+let check_constructor class_table env cls =
+  (* check if class name equeal to constructor name *)
+  let constructor = Class.constructor cls in
+  if Class.name cls <> Constructor.name constructor then
+    raise (Type_error (sprintf "Invalid constructor name: %s" (Constructor.name constructor)));
+  (* add params to env *)
+  let env' = List.fold_left
+    (fun e (name, ty) -> Environment.add (Id.name name) ty e) env (Constructor.params constructor) in
+  List.iter
+    (check_field_initialization class_table env' constructor)
+    (Constructor.body constructor)
 
 
 let check_method class_table env meth =
@@ -91,7 +120,6 @@ let check_methods class_table env cls =
     check_method class_table env meth;
     Environment.add name meth env'
   end env' methods);
-
   ()
 
 
@@ -111,7 +139,7 @@ let check_class class_table env cls =
       (* check_field *)
       Environment.add field_name field_type e
   end env' (Class.fields cls) in
-  check_constructor class_table env' (Class.constructor cls);
+  check_constructor class_table env' cls;
   check_methods class_table env' cls
 
 
