@@ -116,12 +116,40 @@ let test_check_super_constructor text_ctx =
     (Type_error "Invalid arguments for super class constructor")
     (fun _ -> check_class_table class_table)
 
+
+let test_check_method_return_type test_ctx =
+  let classes = [
+    {
+      Class.name = Id.make "A";
+      super = "Object";
+      fields = [ { Field.name = Id.make "x"; ty = Type.make "Object" } ];
+      constructor = {
+        Constructor.name = Id.make "A";
+        params = [ (Id.make "x", Type.make "Object") ];
+        body = [ (Id.make "x", Var (Id.make "x")) ];
+        super_args = [];
+      };
+      methods = [ {
+        Method.name = (Id.make "getX");
+        params = [];
+        body = FieldGet (Var(Id.make "this"), Id.make "x");
+        return_type = Type.make "A";
+      } ];
+    }
+  ] in
+  let class_table = make_class_table classes in
+  assert_raises
+    (Type_error "Invalid method return type: getX")
+    (fun _ -> check_class_table class_table)
+
+
 let suite =
   "typing">::: [
     "test_check_uninitialized_field">:: test_check_uninitialized_field;
     "test_check_constructor">:: test_check_constructor;
     "test_check_constructor_init">:: test_check_constructor_init;
-    "test_check_super_constructor">:: test_check_super_constructor
+    "test_check_super_constructor">:: test_check_super_constructor;
+    "test_check_method_return_type">:: test_check_method_return_type
   ]
 
 let () = run_test_tt_main suite

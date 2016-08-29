@@ -143,14 +143,20 @@ let check_constructor class_table env cls =
   check_constructor_super class_table env' cls
 
 
-let check_method class_table env meth =
+let check_method_oveerride class_table cls meth = ()
+
+
+let check_method class_table env meth cls =
   (* add params to env *)
   let env' =
     List.fold_left
       (fun e (name, ty) -> Environment.add (Id.name name) ty e)
       env (Method.params meth) in
-  ignore (check_expr class_table env' (Method.body meth) )
-  (* TODO check match return type *)
+  let actual_type = check_expr class_table env' (Method.body meth) in
+  if not (is_subclass class_table (Method.return_type meth) actual_type) then
+    raise (Type_error (
+      "Invalid method return type: " ^ (Method.name meth)));
+  check_method_oveerride class_table cls meth
 
 
 let check_methods class_table env cls =
@@ -161,7 +167,7 @@ let check_methods class_table env cls =
     if Environment.mem name env' then
       raise (Type_error (
         sprintf "duplicate method '%s' in class '%s'" (Method.name meth) (Class.name cls)));
-    check_method class_table env meth;
+    check_method class_table env meth cls;
     Environment.add name meth env'
   end env' methods);
   ()
