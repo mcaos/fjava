@@ -185,6 +185,47 @@ let test_check_method_call test_ctx =
     (Type_error "Method not found: getY")
     (fun _ -> check_class_table class_table)
 
+let test_check_invalid_args_method_call test_ctx =
+  let classes = [
+    {
+      Class.name = Id.make "A";
+      super = "Object";
+      fields = [ { Field.name = Id.make "x"; ty = Type.make "Object" } ];
+      constructor = {
+        Constructor.name = Id.make "A";
+        params = [ (Id.make "x", Type.make "Object") ];
+        body = [ (Id.make "x", Var (Id.make "x")) ];
+        super_args = [];
+      };
+      methods = [ {
+        Method.name = (Id.make "getX");
+        params = [];
+        body = FieldGet (Var(Id.make "this"), Id.make "x");
+        return_type = Type.make "Object";
+      } ];
+    };
+    {
+      Class.name = Id.make "B";
+      super = "A";
+      fields = [];
+      constructor = {
+        Constructor.name = Id.make "B";
+        params = [ (Id.make "x", Type.make "Object") ];
+        body = [];
+        super_args = [Var(Id.make "x") ];
+      };
+      methods = [ {
+        Method.name = (Id.make "get");
+        params = [ (Id.make "y", Type.make "Object") ];
+        body = MethodCall (Var(Id.make "this"), Id.make "getX", [Var(Id.make "y")]);
+        return_type = Type.make "Object";
+      } ];
+    }
+  ] in
+  let class_table = make_class_table classes in
+  assert_raises
+    (Type_error "Invalid arguments: getX")
+    (fun _ -> check_class_table class_table)
 
 
 let suite =
@@ -194,7 +235,8 @@ let suite =
     "test_check_constructor_init">:: test_check_constructor_init;
     "test_check_super_constructor">:: test_check_super_constructor;
     "test_check_method_return_type">:: test_check_method_return_type;
-    "test_check_method_call">:: test_check_method_call
+    "test_check_method_call">:: test_check_method_call;
+    "test_check_invalid_args_method_call">:: test_check_invalid_args_method_call
   ]
 
 let () = run_test_tt_main suite
