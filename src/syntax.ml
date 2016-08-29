@@ -14,6 +14,7 @@ end
 type expr =
     Var of Id.t
   | FieldGet of expr * Id.t
+    (* instance * method_name * argments *)
   | MethodCall of expr * Id.t * expr list
   | New of Id.t * expr list
   | Cast of Id.t * expr
@@ -29,6 +30,8 @@ module Method = struct
   let params m = m.params
   let body m = m.body
   let return_type m = m.return_type
+
+  let params_type m = List.map snd m.params
 end
 
 module Constructor = struct

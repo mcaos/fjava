@@ -32,42 +32,10 @@ let get_class class_table name =
   Environment.find name class_table
 
 
-let get_field cls field_name =
-  try
-    List.find (fun f -> Field.name f = field_name) (Class.fields cls)
-  with
-    Not_found ->
-      raise (Type_error (sprintf "the field `%s` is not member of the class `%s`" field_name (Class.name cls)))
+let super_of class_table cls =
+  get_class class_table (Class.super cls)
 
 
-let rec check_expr class_table env = function
-  (* return var type if exists in env *)
-  | Var({ Id.name = n; }) when Environment.mem n env -> Environment.find n env
-  | Var(n) -> raise (Type_error (sprintf "`%s` is not defined in current environment" (Id.name n)))
-  | FieldGet(e, n) ->
-    let c = get_class class_table (check_expr class_table env e) in
-    let f = get_field c (Id.name n) in
-    Field.ty f
-  | _ -> raise (Type_error ("not impleented"))
-  (*
-  | MethodCall(e0, x0, es0) ->
-    let ts0 = L.map (infer_expr ct env) es0 in
-    let k0 = class_of ct (Type.name (infer_expr ct env e0)) in
-    let m0 = choice_most_specific_method ct k0 x0 ts0 in
-    Method.ret_type m0
-  | New(x0, es0) ->
-    let ts0 = L.map (infer_expr ct env) es0 in
-    let k0 = class_of ct x0 in
-    ignore (choice_most_specific_ctor ct k0 ts0);
-    Type.name x0
-  | Cast(t0, e0) ->
-    let t1 = infer_expr ct env e0 in
-    if not (is_subclass ct t0 t1) then
-      raise (Type_error (sprintf "`%s` is not subclass of `%s`." (Type.name t1) (Type.name t0)));
-    t0
-  *)
-
-(* is c1 subclass of c0 *)
 let rec is_subclass class_table c0 c1 =
   if c0 = c1 then
     (* C <: C *)
@@ -88,8 +56,58 @@ let rec is_subclasses class_table l0 l1 =
       (is_subclass class_table c0 c1) && (is_subclasses class_table cs0 cs1)
 
 
-let super_of class_table cls =
-  get_class class_table (Class.super cls)
+let get_field cls field_name =
+  try
+    List.find (fun f -> Field.name f = field_name) (Class.fields cls)
+  with
+    Not_found ->
+      raise (Type_error (sprintf "the field `%s` is not member of the class `%s`" field_name (Class.name cls)))
+
+
+let get_method class_table cls method_name =
+  let rec get_method class_table cls' method_name =
+    try
+      List.find (fun m -> Method.name m = method_name) (Class.methods cls')
+    with Not_found ->
+      (* find method in super class *)
+      if Class.ty cls' = Class.ty base_class then
+        raise (Type_error (sprintf "Method not found: %s" method_name));
+      let super_class = super_of class_table cls' in
+      get_method class_table super_class method_name in
+  get_method class_table cls method_name
+
+
+
+let rec check_expr class_table env = function
+  (* return var type if exists in env *)
+  | Var({ Id.name = n; }) when Environment.mem n env -> Environment.find n env
+  | Var(n) -> raise (Type_error (sprintf "`%s` is not defined in current environment" (Id.name n)))
+  | FieldGet(e, n) ->
+    let c = get_class class_table (check_expr class_table env e) in
+    let f = get_field c (Id.name n) in
+    Field.ty f
+  | MethodCall(instance, method_name, args) ->
+    let args_type = List.map (check_expr class_table env) args in
+    let class_of_inst = get_class class_table (check_expr class_table env instance) in
+    let meth = get_method class_table class_of_inst (Id.name method_name) in
+    let meth_params_type = Method.params_type meth in
+    if is_subclasses class_table meth_params_type args_type then
+      Method.return_type meth
+    else
+      raise (Type_error (sprintf "Invalid arguments: %s" (Id.name method_name)))
+  | _ -> raise (Type_error ("not impleented"))
+  (*
+  | New(x0, es0) ->
+    let ts0 = L.map (infer_expr ct env) es0 in
+    let k0 = class_of ct x0 in
+    ignore (choice_most_specific_ctor ct k0 ts0);
+    Type.name x0
+  | Cast(t0, e0) ->
+    let t1 = infer_expr ct env e0 in
+    if not (is_subclass ct t0 t1) then
+      raise (Type_error (sprintf "`%s` is not subclass of `%s`." (Type.name t1) (Type.name t0)));
+    t0
+  *)
 
 
 let check_constructor_super class_table env cls =
