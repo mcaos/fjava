@@ -9,12 +9,13 @@ let print_error lexbuf message =
   eprintf "%s:line %d: %s\n" file line message
 
 let read_from_file file =
-  print_endline ("Reading from " ^ file);
+  print_endline ("Reading from: " ^ file);
   let ic = open_in file in
   let lexbuf = Lexing.from_channel ic in
   try
     let program = Parser.toplevel Lexer.main lexbuf in
     check program;
+    print_endline ("Check OK😇")
   with e ->
     begin match e with
       Parser.Error ->
